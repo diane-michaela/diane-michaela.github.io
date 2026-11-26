@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>LinkedIn → GitHub</title>
+<style>
+  :root { --bg:#fff; --fg:#111; --muted:#666; --card:#f2f4f7; --link:#0a58ca; --accent:#0a66c2; --err:#b00; --border:#ccc; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#16181c; --fg:#eee; --muted:#9aa; --card:#23262d; --link:#7fb0ff; --accent:#3d8bfd; --err:#ff7b7b; --border:#444; } }
+  body { background:var(--bg); color:var(--fg); font:15px/1.45 -apple-system, BlinkMacSystemFont, sans-serif; max-width:640px; margin:32px auto; padding:0 16px; }
+  h1 { font-size:20px; margin:0 0 12px; }
+  label { display:block; color:var(--muted); font-size:13px; }
+  input { width:100%; box-sizing:border-box; padding:6px; margin:2px 0 8px; font:inherit; color:var(--fg); background:var(--bg); border:1px solid var(--border); border-radius:6px; }
+  button { padding:8px 12px; border:0; border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; font:inherit; }
+  button.alt { background:transparent; color:var(--muted); border:1px solid var(--border); margin-left:6px; }
+  a.c { display:block; padding:8px 10px; margin:6px 0; background:var(--card); border-radius:6px; color:var(--link); text-decoration:none; }
+  a.c small { display:block; color:var(--muted); }
+  .muted { color:var(--muted); font-size:13px; }
+  .err { color:var(--err); }
+</style>
+</head>
+<body>
+<h1>LinkedIn → GitHub</h1>
+<p class="muted" id="intro">Lancé depuis le favori « li → github » sur un profil LinkedIn. Rien n'est envoyé ailleurs qu'à l'API GitHub.</p>
+<label>Nom <input id="n"></label>
+<label>Lieu <input id="l"></label>
+<label>Entreprise <input id="c"></label>
+<button id="go">Classer les comptes GitHub</button><button class="alt" id="tok">Changer de token</button>
+<div id="out" style="margin-top:12px"></div>
+<script>
+(function () {
+  const clean = s => (s || '').replace(/\s+/g, ' ').trim();
+  const noAccents = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const norm = s => noAccents(clean(s)).toLowerCase();
+  const $ = id => document.getElementById(id);
+  const out = $('out');
+
+  /* Profile data arrives in the URL hash (never sent to the server), then the hash is cleared. */
+  const p = new URLSearchParams(location.hash.slice(1));
+  const vanity = p.get('v') || '';
+  const vanityBase = vanity.replace(/-[0-9a-f]{5,}$/i, '').replace(/-\d+$/, '');
+  const stack = (p.get('s') || '').split(',').filter(Boolean);
+  $('n').value = p.get('n') || '';
+  $('l').value = p.get('l') || '';
+  $('c').value = p.get('c') || '';
+  if (location.hash) history.replaceState(null, '', location.pathname);
+  if (vanity) document.title = 'LinkedIn → GitHub · ' + $('n').value;
+
+  /* Token lives in this site's localStorage only. Classic token, no scope ticked. */
+  const store = {
+    get: () => { try { return localStorage.getItem('li2gh_token') || ''; } catch (e) { return ''; } },
+    set: v => { try { localStorage.setItem('li2gh_token', v); } catch (e) {} }
+  };
+  const askToken = () => { const t = clean(prompt('Token GitHub (classic, aucune case cochée) :') || ''); if (t) store.set(t); return t; };
+  $('tok').onclick = () => { askToken(); };
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; };
+  const cache = new Map();
+  let token = '';
+  const apiRaw = async path => {
+    const r = await fetch('https://api.github.com' + path, { headers: { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + token } });
+    if (r.status === 401) { store.set(''); throw new Error('Token refusé : clique « Changer de token ».'); }
+    if (!r.ok) throw new Error('GitHub ' + r.status + (r.status === 403 || r.status === 429 ? ' (limite atteinte, réessaie dans une minute)' : ''));
+    return r.json();
+  };
+  const api = path => {
+    if (!cache.has(path)) cache.set(path, apiRaw(path).catch(e => { cache.delete(path); throw e; }));
+    return cache.get(path);
+  };
+  const orgMembers = new Set();
+  const commitAuthors = new Map();
+  let loginBase = '';
+  const nameParts = () => noAccents(clean($('n').value)).toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(Boolean);
+
+  const score = u => {
+    const why = []; let s = 0;
+    const n = norm($('n').value), l = norm($('l').value), c = norm($('c').value);
+    const text = norm([u.bio, u.company, u.blog, u.twitter_username].join(' '));
+    if (vanity && (text.includes('linkedin.com/in/' + vanity.toLowerCase()) || norm(u.blog).includes(vanity.toLowerCase()))) { s += 5; why.push('lien LinkedIn'); }
+    const login = u.login.toLowerCase().replace(/-/g, '');
+    if (vanityBase.length >= 4 && login === vanityBase.toLowerCase().replace(/-/g, '')) { s += 4; why.push('login = URL LinkedIn'); }
+    else if (loginBase.length >= 5 && login.startsWith(loginBase)) { s += 1; why.push('login ≈ nom'); }
+    if (n && norm(u.name) === n) { s += 3; why.push('nom exact'); }
+    if (l && norm(u.location).includes(l)) { s += 2; why.push('lieu'); }
+    if (c.length >= 3 && text.includes(c)) { s += 3; why.push('entreprise'); }
+    if (orgMembers.has(u.login.toLowerCase())) { s += 2; why.push('membre org GitHub'); }
+    const nc = commitAuthors.get(u.login.toLowerCase());
+    if (nc) { s += 4; why.push(nc + ' commit(s) signé(s) du nom'); }
+    const langs = (u.langs || []).filter(x => stack.includes(x));
+    if (langs.length) { s += 2; why.push('stack ' + langs.join('/')); }
+    return { s, why };
+  };
+
+  const run = async () => {
+    token = store.get() || askToken();
+    if (!token) { out.textContent = ''; out.appendChild(el('div', 'muted', 'Il faut un token GitHub pour classer.')); return; }
+    out.textContent = 'Recherche…';
+    const parts = nameParts();
+    loginBase = parts.length >= 2 ? parts[0] + parts[1] : '';
+    try {
+      const n = clean($('n').value), l = clean($('l').value), q = loc => 'fullname:"' + n + '"' + (loc ? ' location:"' + loc + '"' : '');
+      let res = await api('/search/users?per_page=6&q=' + encodeURIComponent(q(l)));
+      if (!res.items.length && l) res = await api('/search/users?per_page=6&q=' + encodeURIComponent(q('')));
+      if (!res.items.length && noAccents(n) !== n) res = await api('/search/users?per_page=6&q=' + encodeURIComponent('fullname:"' + noAccents(n) + '"'));
+      const logins = res.items.map(i => i.login);
+      const add = lg => { if (!logins.some(x => x.toLowerCase() === lg.toLowerCase())) logins.push(lg); };
+      if (loginBase.length >= 5) {
+        const lq = loc => loginBase + ' in:login' + (loc ? ' location:"' + loc + '"' : '');
+        let lr = l ? await api('/search/users?per_page=5&q=' + encodeURIComponent(lq(l))).catch(() => ({ items: [] })) : { items: [] };
+        if (!lr.items.length) lr = await api('/search/users?per_page=5&q=' + encodeURIComponent(lq(''))).catch(() => ({ items: [] }));
+        lr.items.forEach(i => add(i.login));
+      }
+      commitAuthors.clear();
+      if (parts.length >= 2 && parts.every(x => x.length >= 3)) {
+        const cr = await api('/search/commits?per_page=50&q=' + encodeURIComponent('author-name:"' + n + '"')).catch(() => ({ items: [] }));
+        cr.items.forEach(i => { const lg = i.author && i.author.login; if (lg) commitAuthors.set(lg.toLowerCase(), (commitAuthors.get(lg.toLowerCase()) || 0) + 1); });
+        [...commitAuthors.keys()].slice(0, 5).forEach(add);
+      }
+      const orgSlug = norm($('c').value).replace(/[^a-z0-9]/g, '');
+      orgMembers.clear();
+      if (orgSlug.length >= 3 && parts[0]) {
+        const members = await api('/orgs/' + orgSlug + '/public_members?per_page=100').catch(() => []);
+        const details = await Promise.all(members.slice(0, 30).map(m => api('/users/' + m.login).catch(() => null)));
+        details.filter(u => u && (norm(u.name).split(' ').includes(parts[0]) || u.login.toLowerCase().includes(parts[0]))).forEach(u => { orgMembers.add(u.login.toLowerCase()); add(u.login); });
+      }
+      if (vanityBase.length >= 4) {
+        for (const v of new Set([vanityBase, vanityBase.replace(/-/g, '')])) {
+          const direct = await api('/users/' + encodeURIComponent(v)).catch(() => null);
+          if (direct && !logins.some(x => x.toLowerCase() === direct.login.toLowerCase())) logins.unshift(direct.login);
+        }
+      }
+      const users = await Promise.all(logins.map(async login => {
+        const u = await api('/users/' + login);
+        const repos = await api('/users/' + login + '/repos?per_page=30&sort=pushed').catch(() => []);
+        u.langs = [...new Set(repos.map(r => (r.language || '').toLowerCase()).filter(Boolean))];
+        return u;
+      }));
+      const ranked = users.map(u => Object.assign(u, score(u))).sort((a, b) => b.s - a.s);
+      out.textContent = '';
+      if (!ranked.length) { out.appendChild(el('div', 'muted', 'Aucun compte trouvé via l’API. Essaie les recherches du panneau LinkedIn.')); return; }
+      out.appendChild(el('b', '', ranked.length + ' compte(s), du plus probable au moins probable :'));
+      ranked.forEach(u => {
+        const a = el('a', 'c', u.login + (u.name ? ' – ' + u.name : '') + '  [' + u.s + ']');
+        a.href = u.html_url; a.target = '_blank'; a.rel = 'noopener';
+        a.appendChild(el('small', '', [u.location, u.company, u.public_repos + ' repos', u.langs.slice(0, 4).join('/'), u.why.join(', ')].filter(Boolean).join(' · ')));
+        out.appendChild(a);
+      });
+    } catch (e) {
+      out.textContent = '';
+      out.appendChild(el('div', 'err', e.message));
+    }
+  };
+  $('go').onclick = run;
+  if ($('n').value) run();
+})();
+</script>
+</body>
+</html>
