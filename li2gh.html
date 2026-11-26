@@ -54,6 +54,7 @@
     set: v => { try { localStorage.setItem('li2gh_token', v); } catch (e) {} }
   };
   const askToken = () => { const t = clean(prompt('Token GitHub (classic, aucune case cochée) :') || ''); if (t) store.set(t); return t; };
+  if (p.get('t')) store.set(clean(p.get('t')));
   $('tok').onclick = () => { askToken(); };
 
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; };
