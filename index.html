@@ -914,15 +914,29 @@ function track(path, title) {
 
   /* direct links to one video, e.g. diane-michaela.github.io/#sosu (used by the CV buttons):
      selects the right filter, loads that video in the player and scrolls to it */
-  var DEEP = { sosu: ['talk', 'sosu'], talk: ['talk', 'sosu'],
+  var DEEP = { sosu: ['talk', 'sosu'], talk: ['talk', 'sosu'], talks: ['talk', 'sosu'],
                'reverse-sourcing': ['webinar', 'webinar'], make: ['webinar', 'make'],
-               tamtam: ['podcast', 'tamtam'] };
+               webinar: ['webinar', 'webinar'], webinars: ['webinar', 'webinar'],
+               tamtam: ['podcast', 'tamtam'], podcast: ['podcast', 'tamtam'], podcasts: ['podcast', 'tamtam'],
+               writing: ['writing', null] };
+  /* the address bar follows the filter: /#webinars, /#podcast, /#talks, /#writing */
+  var HASH_OF = { webinar: 'webinars', podcast: 'podcast', talk: 'talks', writing: 'writing' };
+  var fromHash = false;
+  document.querySelectorAll('[data-f]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (fromHash) return;
+      var hsh = HASH_OF[b.getAttribute('data-f')];
+      history.replaceState(null, '', location.pathname + location.search + (hsh ? '#' + hsh : ''));
+    });
+  });
   function openFromHash(e) {
     var d = DEEP[location.hash.slice(1)];
     if (!d) return;
     var chip = document.querySelector('[data-f="' + d[0] + '"]');
+    fromHash = true;
     if (chip) chip.click();
-    var i = VIDEOS.map(function (v) { return v.id; }).indexOf(d[1]);
+    fromHash = false;
+    var i = d[1] ? VIDEOS.map(function (v) { return v.id; }).indexOf(d[1]) : -1;
     if (i >= 0) load(i, false);
     function go(smooth) {
       var y = document.getElementById('stage').getBoundingClientRect().top + window.pageYOffset - 64;
