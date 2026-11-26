@@ -271,6 +271,7 @@ footer p { color: var(--muted); max-width: 560px; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
 </style>
+<script data-goatcounter="https://dianerocher.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 
@@ -630,6 +631,10 @@ footer p { color: var(--muted); max-width: 560px; }
 </footer>
 
 <script>
+/* anonymous stats (GoatCounter: no cookies, no personal data). Each call is one event in the dashboard. */
+function track(path, title) {
+  try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: path, title: title || path, event: true }); } catch (e) {}
+}
 (function () {
   /* theme */
   var root = document.documentElement, KEY = 'theme';
@@ -697,6 +702,15 @@ footer p { color: var(--muted); max-width: 560px; }
       var vid = document.createElement('video');
       vid.controls = true; vid.preload = 'none'; vid.poster = v.poster; vid.playsInline = true;
       vid.src = v.src; vid.setAttribute('aria-label', v.title);
+      var seen = v.seen || (v.seen = {});
+      function mark(k) { if (!seen[k]) { seen[k] = 1; track('video-' + v.id + '-' + k, v.title + ' (' + k + ')'); } }
+      vid.addEventListener('play', function () { mark('start'); });
+      vid.addEventListener('timeupdate', function () {
+        if (!vid.duration) return;
+        var p = vid.currentTime / vid.duration;
+        if (p >= .5) mark('half');
+        if (p >= .95) mark('end');
+      });
       screen.appendChild(vid);
       if (autoplay) vid.play().catch(function () {});
     }
@@ -718,6 +732,7 @@ footer p { color: var(--muted); max-width: 560px; }
       '<a class="btn ask" href="mailto:' + mail + '?subject=' + encodeURIComponent(subject) +
       '&body=' + encodeURIComponent(body) + '">✉ Ask Diane for the code</a>' +
       '</form></div>';
+    screen.querySelector('.ask').addEventListener('click', function () { track('code-' + v.id + '-ask', 'Asked Diane for the code: ' + v.title); });
     var form = screen.querySelector('form'), input = form.querySelector('input'),
         msg = form.querySelector('.lock-msg'), btn = form.querySelector('button');
     form.addEventListener('submit', function (e) {
@@ -727,10 +742,12 @@ footer p { color: var(--muted); max-width: 560px; }
       btn.disabled = true; msg.className = 'lock-msg'; msg.textContent = 'Loading… 0 %';
       unlock(v, code, function (p) { msg.textContent = p; }).then(function (url) {
         v.src = url;
+        track('code-' + v.id + '-unlocked', 'Unlocked with the code: ' + v.title);
         if (VIDEOS[VIDEOS.indexOf(v)] === v) load(VIDEOS.indexOf(v), true);
       }).catch(function (err) {
         btn.disabled = false;
         msg.className = 'lock-msg bad';
+        if (err && err.wrong) track('code-' + v.id + '-wrong', 'Wrong code: ' + v.title);
         msg.textContent = err && err.wrong ? 'Wrong code. Ask Diane for it below.' : 'Could not load the video. Please try again.';
         input.select();
       });
@@ -840,7 +857,11 @@ footer p { color: var(--muted); max-width: 560px; }
     current = s;
     var v = s.querySelector('video');
     v.muted = !sound; icon(s, sound);
-    if (sound) { try { v.currentTime = 0; } catch (e) {} }
+    if (sound) {
+      try { v.currentTime = 0; } catch (e) {}
+      var name = (v.getAttribute('src') || '').split('/').pop().split('.')[0];
+      track('reel-' + name, 'Reel: ' + s.querySelector('b').textContent);
+    }
     v.play().catch(function () {});
   }
   function shortsFilter(f) {
@@ -915,6 +936,15 @@ footer p { color: var(--muted); max-width: 560px; }
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   window.addEventListener('hashchange', openFromHash);
   openFromHash();
+
+  /* clicks to LinkedIn, GitHub, Medium, X, events... and on "Email me" */
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (/^mailto:/.test(href) && !a.classList.contains('ask')) track('click-email', 'Clicked: Email me');
+    else if (/^https?:/.test(href) && a.hostname !== location.hostname) track('out-' + a.hostname.replace(/^www\./, ''), 'Left to ' + a.hostname + ' (' + (a.textContent || '').trim().slice(0, 40) + ')');
+  });
 
   /* career accordion */
   document.querySelectorAll('.job button').forEach(function (b) {
