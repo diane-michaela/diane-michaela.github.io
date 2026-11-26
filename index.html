@@ -218,6 +218,25 @@ section { padding: 48px 0; }
 
 #watch { scroll-margin-top: 72px; }
 
+/* locked video */
+.lock { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px;
+  background: #000 center / cover no-repeat; }
+.lock::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(14px); background: rgba(8,10,20,.62); }
+.lock-card { position: relative; width: min(420px, 100%); text-align: center; color: #fff; }
+.lock-ico { font-size: 30px; }
+.lock-card h3 { font-size: 21px; margin: 6px 0 4px; }
+.lock-card p { margin: 0 0 12px; color: rgba(255,255,255,.8); font-size: 14px; }
+.lock-row { display: flex; gap: 8px; }
+.lock-row input { flex: 1; min-width: 0; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.12); color: #fff; font: 500 15px Inter, sans-serif; letter-spacing: .04em; }
+.lock-row input::placeholder { color: rgba(255,255,255,.6); }
+.lock-row .btn { color: #fff; background: #2a52c9; border-color: #2a52c9; cursor: pointer; }
+.lock-row .btn:disabled { opacity: .6; cursor: default; }
+.lock-msg { min-height: 20px; margin: 8px 0 6px !important; font-size: 13px !important; }
+.lock-msg.bad { color: #ffb4b4 !important; }
+.lock .ask { background: transparent; color: #fff; border-color: rgba(255,255,255,.6); }
+.lock .ask:hover { border-color: #fff; text-decoration: none; }
+
 /* player */
 .player { display: grid; gap: 14px; grid-template-columns: 1fr; margin-bottom: 28px; }
 @media (min-width: 900px) { .player { grid-template-columns: 2fr 1fr; } }
@@ -655,7 +674,7 @@ footer p { color: var(--muted); max-width: 560px; }
       src: 'media/tamtam-81.mp4', poster: 'media/tamtam-poster.jpg' },
     { id: 'sosu', type: 'talk', title: 'The AI-Powered Intake: What Happens to Recruiter Judgement?', where: 'Sourcing Summit Europe · Amsterdam · Oct 2026 · 30 min',
       desc: 'The recruiter defines the need in the room; an automated workflow carries it forward. Where judgement stays human.',
-      src: 'media/sosu-2026-talk.mp4', poster: 'media/sosu-poster.jpg' }
+      enc: 'media/sosu-2026-talk.enc', poster: 'media/sosu-poster.jpg' }
   ];
   var screen = document.getElementById('screen'), now = document.getElementById('now'),
       pl = document.getElementById('playlist');
@@ -665,6 +684,7 @@ footer p { color: var(--muted); max-width: 560px; }
     pl.querySelectorAll('.track').forEach(function (t, j) { t.setAttribute('aria-pressed', String(i === j)); });
     now.innerHTML = '<h3>' + esc(v.title) + '</h3><p>' + esc(v.where) + '</p><p>' + esc(v.desc) + '</p>';
     screen.innerHTML = '';
+    if (v.enc && !v.src) { lockScreen(v, autoplay); return; }
     if (v.yt) {
       var f = document.createElement('button');
       f.className = 'facade'; f.setAttribute('aria-label', 'Play ' + v.title);
@@ -682,6 +702,82 @@ footer p { color: var(--muted); max-width: 560px; }
       if (autoplay) vid.play().catch(function () {});
     }
   }
+  /* locked videos: the file on the server is AES-GCM encrypted (tools/encrypt_video.py).
+     The code is never in the page: without it the download is unreadable. */
+  function lockScreen(v, autoplay) {
+    var mail = 'dianemichaela88' + '@' + 'gmail.com';
+    var subject = 'Code for your talk "' + v.title + '"';
+    var body = 'Hi Diane,\n\nI would like to watch your talk "' + v.title + '" on your website. Could you send me the code?\n\nThanks,\n';
+    screen.innerHTML =
+      '<div class="lock" style="background-image:url(' + v.poster + ')"><form class="lock-card">' +
+      '<div class="lock-ico" aria-hidden="true">🔒</div>' +
+      '<h3>This talk is shared on request</h3>' +
+      '<p>Enter the code to watch the full talk.</p>' +
+      '<div class="lock-row"><input type="password" autocomplete="off" placeholder="Code" aria-label="Code">' +
+      '<button type="submit" class="btn primary">Unlock</button></div>' +
+      '<p class="lock-msg" role="status"></p>' +
+      '<a class="btn ask" href="mailto:' + mail + '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(body) + '">✉ Ask Diane for the code</a>' +
+      '</form></div>';
+    var form = screen.querySelector('form'), input = form.querySelector('input'),
+        msg = form.querySelector('.lock-msg'), btn = form.querySelector('button');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var code = input.value.trim();
+      if (!code) { input.focus(); return; }
+      btn.disabled = true; msg.className = 'lock-msg'; msg.textContent = 'Loading… 0 %';
+      unlock(v, code, function (p) { msg.textContent = p; }).then(function (url) {
+        v.src = url;
+        if (VIDEOS[VIDEOS.indexOf(v)] === v) load(VIDEOS.indexOf(v), true);
+      }).catch(function (err) {
+        btn.disabled = false;
+        msg.className = 'lock-msg bad';
+        msg.textContent = err && err.wrong ? 'Wrong code. Ask Diane for it below.' : 'Could not load the video. Please try again.';
+        input.select();
+      });
+    });
+  }
+  var encCache = {};
+  function fetchBytes(url, progress) {
+    if (encCache[url]) return Promise.resolve(encCache[url]);
+    return fetch(url).then(function (r) {
+      if (!r.ok || !r.body) throw new Error('http');
+      var total = +r.headers.get('content-length') || 0, got = 0, parts = [], reader = r.body.getReader();
+      function pump() {
+        return reader.read().then(function (x) {
+          if (x.done) {
+            var all = new Uint8Array(got), o = 0;
+            parts.forEach(function (c) { all.set(c, o); o += c.length; });
+            encCache[url] = all;
+            return all;
+          }
+          parts.push(x.value); got += x.value.length;
+          if (total) progress('Loading… ' + Math.round(got / total * 100) + ' %');
+          return pump();
+        });
+      }
+      return pump();
+    });
+  }
+  function unlock(v, code, progress) {
+    return fetchBytes(v.enc, progress).then(function (buf) {
+      progress('Unlocking…');
+      if (String.fromCharCode(buf[0], buf[1], buf[2], buf[3]) !== 'DRV1') throw new Error('format');
+      var salt = buf.slice(4, 20), iv = buf.slice(20, 32), data = buf.subarray(32);
+      return crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey'])
+        .then(function (base) {
+          return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salt, iterations: 600000, hash: 'SHA-256' },
+            base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+        })
+        .then(function (key) {
+          return crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, data).catch(function () {
+            var e = new Error('wrong'); e.wrong = true; throw e;
+          });
+        })
+        .then(function (plain) { return URL.createObjectURL(new Blob([plain], { type: 'video/mp4' })); });
+    });
+  }
+
   VIDEOS.forEach(function (v, i) {
     var b = document.createElement('button');
     b.className = 'track'; b.type = 'button';
