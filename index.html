@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diane Rocher · Technical Talent Partner & RecOps</title>
+<meta name="description" content="Diane Rocher: technical recruiter and RecOps builder. Talks, podcasts, webinars, articles and open-source hiring automations.">
+<meta property="og:title" content="Diane Rocher · Technical Talent Partner & RecOps">
+<meta property="og:description" content="Talks, podcasts, webinars and open-source hiring automations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f8fc;
+  --surface: #ffffff;
+  --surface-2: #eef2fd;
+  --text: #121826;
+  --muted: #5b6477;
+  --line: #e2e6f0;
+  --accent: #1d4ed8;
+  --accent-soft: #dbe5ff;
+  --accent-text: #ffffff;
+  --talk: #1d4ed8;
+  --podcast: #b4235a;
+  --webinar: #0f766e;
+  --writing: #a15c07;
+  --shadow: 0 1px 2px rgba(18,24,38,.05), 0 8px 24px rgba(18,24,38,.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117; --surface: #151b26; --surface-2: #1b2435; --text: #e8ecf4; --muted: #9aa4b8;
+    --line: #273044; --accent: #7aa2ff; --accent-soft: #1e2b4d; --accent-text: #0d1117;
+    --talk: #7aa2ff; --podcast: #f27aa8; --webinar: #4fd1c0; --writing: #f0b45b;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1117; --surface: #151b26; --surface-2: #1b2435; --text: #e8ecf4; --muted: #9aa4b8;
+  --line: #273044; --accent: #7aa2ff; --accent-soft: #1e2b4d; --accent-text: #0d1117;
+  --talk: #7aa2ff; --podcast: #f27aa8; --webinar: #4fd1c0; --writing: #f0b45b;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.6 Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1, h2, h3 { font-family: "Space Grotesk", Inter, sans-serif; line-height: 1.15; margin: 0; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 720px) { .wrap { padding: 0 32px; } }
+
+/* nav */
+nav {
+  position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--bg) 82%, transparent); border-bottom: 1px solid var(--line);
+}
+nav .wrap { display: flex; align-items: center; gap: 16px; height: 56px; }
+nav .brand { font-family: "Space Grotesk"; font-weight: 700; color: var(--text); margin-right: auto; }
+nav .links { display: none; gap: 20px; font-size: 14px; }
+nav .links a { color: var(--muted); }
+nav .links a:hover { color: var(--text); text-decoration: none; }
+@media (min-width: 720px) { nav .links { display: flex; } }
+.icon-btn {
+  border: 1px solid var(--line); background: var(--surface); color: var(--text);
+  width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: grid; place-items: center;
+}
+
+/* hero */
+.hero { padding: 64px 0 40px; }
+.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.hero h1 { font-size: clamp(40px, 8vw, 72px); margin: 10px 0 14px; letter-spacing: -.02em; }
+.hero .role { font-size: clamp(18px, 2.6vw, 22px); color: var(--muted); max-width: 640px; margin: 0 0 24px; }
+.hero .role b { color: var(--text); font-weight: 600; }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px;
+  font-size: 14px; font-weight: 600; border: 1px solid var(--line); background: var(--surface); color: var(--text);
+}
+.btn:hover { text-decoration: none; border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.meta { margin-top: 20px; font-size: 14px; color: var(--muted); }
+
+/* stats */
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 8px 0 24px; }
+@media (min-width: 720px) { .stats { grid-template-columns: repeat(5, 1fr); } }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+.stat .n { font-family: "Space Grotesk"; font-size: 28px; font-weight: 700; }
+.stat .l { font-size: 13px; color: var(--muted); line-height: 1.35; }
+
+/* sections */
+section { padding: 48px 0; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.sec-head h2 { font-size: clamp(26px, 4vw, 34px); }
+.sec-head p { margin: 6px 0 0; color: var(--muted); max-width: 560px; }
+
+/* filters */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  padding: 6px 12px; border-radius: 999px; font: 500 13px Inter, sans-serif; cursor: pointer;
+}
+.chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* stage cards */
+.grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 960px) { .grid.three { grid-template-columns: repeat(3, 1fr); } }
+.card {
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow);
+  transition: transform .18s ease, border-color .18s ease;
+}
+.card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.card.hidden { display: none; }
+.card.feature { grid-column: 1 / -1; }
+@media (min-width: 640px) { .card.feature { flex-direction: row; align-items: center; gap: 24px; } }
+.card.feature .big { font-family: "Space Grotesk"; font-size: 15px; font-weight: 700; color: var(--accent);
+  background: var(--accent-soft); border-radius: 14px; padding: 18px; min-width: 150px; text-align: center; }
+.card.feature .big span { display: block; font-size: 34px; line-height: 1.1; }
+.tag { align-self: flex-start; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid currentColor; }
+.tag.talk { color: var(--talk); } .tag.podcast { color: var(--podcast); }
+.tag.webinar { color: var(--webinar); } .tag.writing { color: var(--writing); }
+.card h3 { font-size: 20px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.card .when { font-size: 13px; color: var(--muted); }
+.card .go { margin-top: auto; font-weight: 600; font-size: 14px; }
+.card .go::after { content: " →"; }
+.soon { position: absolute; top: 16px; right: 16px; font-size: 11px; font-weight: 600; padding: 3px 8px;
+  border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+
+/* pipeline */
+.pipe { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; box-shadow: var(--shadow); }
+.steps { display: grid; grid-template-columns: 1fr; gap: 8px; counter-reset: s; }
+@media (min-width: 720px) { .steps { grid-template-columns: repeat(6, 1fr); } }
+.step {
+  text-align: left; border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
+  border-radius: 12px; padding: 12px; cursor: pointer; font: 600 14px Inter, sans-serif; position: relative;
+}
+.step::before { counter-increment: s; content: counter(s); display: block; font: 700 12px "Space Grotesk"; color: var(--muted); margin-bottom: 4px; }
+.step[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.step[aria-selected="true"]::before { color: inherit; opacity: .8; }
+.step-detail { margin-top: 16px; padding: 16px; border-radius: 12px; background: var(--surface-2); min-height: 96px; }
+.step-detail h3 { font-size: 18px; margin-bottom: 6px; }
+.step-detail p { margin: 0; color: var(--muted); }
+.step-detail .tools { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+
+/* projects */
+.proj .stack { display: flex; flex-wrap: wrap; gap: 6px; }
+.proj details { margin-top: 4px; }
+.proj summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); list-style: none; }
+.proj summary::-webkit-details-marker { display: none; }
+.proj summary::before { content: "+ "; }
+.proj details[open] summary::before { content: "− "; }
+.proj details p { margin-top: 8px; }
+
+/* career */
+.timeline { border-left: 2px solid var(--line); margin-left: 6px; }
+.job { position: relative; padding: 0 0 8px 22px; }
+.job::before { content: ""; position: absolute; left: -7px; top: 22px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--surface); border: 2px solid var(--accent); }
+.job button {
+  width: 100%; text-align: left; background: none; border: 0; color: var(--text); cursor: pointer;
+  padding: 14px 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; font: inherit;
+}
+.job .t { font-weight: 600; } .job .c { color: var(--accent); font-weight: 500; }
+.job .d { color: var(--muted); font-size: 14px; }
+.job ul { margin: 0 0 12px; padding-left: 18px; color: var(--muted); display: none; }
+.job.open ul { display: block; }
+.job li { margin: 4px 0; }
+.job li.focus { list-style: none; margin-left: -18px; margin-top: 8px; font-size: 14px; color: var(--accent); }
+
+.skills { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .skills { grid-template-columns: repeat(4, 1fr); } }
+.skills h3 { font-size: 15px; margin-bottom: 8px; }
+.skills .stack { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* article series */
+.series { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; counter-reset: a; }
+.series li { counter-increment: a; }
+.series a { display: grid; grid-template-columns: 28px 1fr; column-gap: 10px; padding: 8px 10px; border-radius: 10px;
+  background: var(--surface-2); color: var(--text); }
+.series a:hover { text-decoration: none; box-shadow: 0 0 0 1px var(--writing); }
+.series a::before { content: counter(a) "/3"; grid-row: span 2; align-self: center; font: 700 12px "Space Grotesk"; color: var(--writing); }
+.series b { font-size: 14px; }
+.series span { font-size: 13px; color: var(--muted); }
+
+/* shorts */
+.shorts-wrap { margin: 0 0 28px; }
+.shorts-title { font-size: 20px; margin-bottom: 12px; display: flex; align-items: baseline; gap: 12px; }
+.shorts-title span { font: 400 13px Inter, sans-serif; color: var(--muted); }
+.shorts { display: grid; grid-auto-flow: column; grid-auto-columns: 80%; gap: 14px;
+  overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+@media (min-width: 900px) { .shorts { grid-auto-columns: calc((100% - 28px) / 2.4); } }
+.shorts { scrollbar-width: none; scroll-behavior: smooth; }
+.shorts::-webkit-scrollbar { display: none; }
+.shorts-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.shorts-head .shorts-title { margin: 0; }
+.shorts-nav { display: flex; gap: 8px; }
+.shorts-nav button:disabled { opacity: .35; cursor: default; }
+.short { position: relative; margin: 0; scroll-snap-align: start; cursor: pointer; border-radius: 16px; overflow: hidden;
+  background: #000; box-shadow: var(--shadow); aspect-ratio: 4 / 5; }
+.short video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.short .sound { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(0,0,0,.55); display: grid; place-items: center; font-size: 16px; }
+.short figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 36px 12px 12px; color: #fff;
+  background: linear-gradient(transparent, rgba(0,0,0,.85)); transition: opacity .2s; }
+.short figcaption b { display: block; font-size: 14px; line-height: 1.3; }
+.short figcaption span { font-size: 12px; opacity: .8; }
+.short.on figcaption { opacity: 0; }
+.short.hidden { display: none; }
+
+/* player */
+.player { display: grid; gap: 14px; grid-template-columns: 1fr; margin-bottom: 28px; }
+@media (min-width: 900px) { .player { grid-template-columns: 2fr 1fr; } }
+.screen { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); }
+.screen video, .screen iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.still { position: absolute; inset: 0; background: #191919; display: block; }
+.still img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.facade { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; cursor: pointer;
+  background: #000 center / cover no-repeat; }
+.facade::after { content: "▶"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 72px; height: 72px; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff;
+  font-size: 28px; display: grid; place-items: center; padding-left: 5px; }
+.facade:hover::after { background: var(--accent); }
+.now { margin-top: 10px; }
+.now h3 { font-size: 20px; }
+.now p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+.playlist { display: flex; flex-direction: column; gap: 10px; }
+.track {
+  display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: center; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px; cursor: pointer;
+  color: var(--text); font: inherit;
+}
+.track[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.track img { width: 120px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; background: var(--surface-2); }
+.track b { display: block; font-size: 14px; line-height: 1.3; }
+.track span { font-size: 12px; color: var(--muted); }
+
+footer { border-top: 1px solid var(--line); padding: 40px 0 56px; margin-top: 24px; }
+footer h2 { font-size: 28px; margin-bottom: 10px; }
+footer p { color: var(--muted); max-width: 560px; }
+.small { font-size: 13px; color: var(--muted); margin-top: 28px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top">Diane Rocher</a>
+    <div class="links">
+      <a href="#stage">Talks &amp; podcasts</a>
+      <a href="#built">Projects</a>
+      <a href="#career">Career</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
+  </div>
+</nav>
+
+<header class="hero wrap" id="top">
+  <div class="eyebrow">Technical Talent Partner &amp; RecOps</div>
+  <h1>Diane Rocher</h1>
+  <p class="role">I hire engineers, data scientists and product people, and I <b>build the tooling behind the hiring</b>: reverse sourcing, scraping, ATS rebuilds and automations that let a lean TA team scale.</p>
+  <div class="cta">
+    <a class="btn primary" href="#stage">Talks &amp; podcasts</a>
+    <a class="btn" href="#built">Projects</a>
+    <a class="btn" href="https://www.linkedin.com/in/diane-rocher-87b4a027" target="_blank" rel="noopener">LinkedIn</a>
+    <a class="btn" href="https://github.com/diane-michaela" target="_blank" rel="noopener">GitHub</a>
+    <a class="btn" href="https://medium.com/@drocher" target="_blank" rel="noopener">Medium</a>
+    <a class="btn" href="https://x.com/diane_rocher" target="_blank" rel="noopener">X</a>
+  </div>
+  <div class="meta">12+ years hiring tech talent internationally · Talent Acquisition Partner at PhantomBuster · French · English · Spanish</div>
+</header>
+
+<section id="stage">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <h2>On stage, on air, in writing</h2>
+        <p>Where I talk about sourcing, RecOps and the automations behind them.</p>
+      </div>
+      <div class="chips" role="group" aria-label="Filter talks and content">
+        <button class="chip" data-f="all" aria-pressed="true">All</button>
+        <button class="chip" data-f="webinar" aria-pressed="false">Webinars</button>
+        <button class="chip" data-f="podcast" aria-pressed="false">Podcast</button>
+        <button class="chip" data-f="talk" aria-pressed="false">Talks</button>
+        <button class="chip" data-f="writing" aria-pressed="false">Writing</button>
+      </div>
+    </div>
+
+    <div class="player" id="watch">
+      <div>
+        <div class="screen" id="screen"></div>
+        <div class="now" id="now"></div>
+      </div>
+      <div class="playlist" id="playlist" role="group" aria-label="Choose a video"></div>
+      <div id="reading" hidden>
+        <ol class="series">
+          <li><a href="https://medium.com/@drocher/reverse-sourcing-1-3-the-brain-linkedin-x-ray-job-queries-bb8dc9ed25b7" target="_blank" rel="noopener"><b>The brain</b><span>LinkedIn X-ray job queries</span></a></li>
+          <li><a href="https://medium.com/@drocher/reverse-sourcing-2-3-the-nervous-system-getting-the-results-out-of-google-713fd30f1f99" target="_blank" rel="noopener"><b>The nervous system</b><span>Getting the results out of Google</span></a></li>
+          <li><a href="https://medium.com/@drocher/reverse-sourcing-3-3-the-skeleton-running-it-with-google-sheets-e7ab57095744" target="_blank" rel="noopener"><b>The skeleton</b><span>Running it with Google Sheets</span></a></li>
+        </ol>
+        <a class="go" style="display:block;margin-top:12px" href="https://medium.com/@drocher" target="_blank" rel="noopener">All articles on Medium</a>
+      </div>
+    </div>
+
+    <div class="shorts-wrap" id="shorts">
+      <div class="shorts-head">
+        <h3 class="shorts-title">Shorts <span>Tap a clip for sound</span></h3>
+        <div class="shorts-nav"><button class="icon-btn" id="sh-prev" aria-label="Previous shorts">←</button><button class="icon-btn" id="sh-next" aria-label="Next shorts">→</button></div>
+      </div>
+      <div class="shorts" id="shorts-row">
+        <figure class="short" data-type="talk">
+          <video src="media/shorts/sosu-human-in-the-loop.mp4" poster="media/shorts/sosu-human-in-the-loop.jpg" muted loop playsinline preload="none"></video>
+          <span class="sound" aria-hidden="true">🔇</span>
+          <figcaption><b>Human in the loop isn't clicking "approve".</b><span>Sourcing Summit Amsterdam</span></figcaption>
+        </figure>
+        <figure class="short" data-type="webinar">
+          <video src="media/shorts/confident-noise.mp4" poster="media/shorts/confident-noise.jpg" muted loop playsinline preload="none"></video>
+          <span class="sound" aria-hidden="true">🔇</span>
+          <figcaption><b>Asking AI to judge your data? You get confident noise.</b><span>PhantomBuster webinar</span></figcaption>
+        </figure>
+        <figure class="short" data-type="webinar">
+          <video src="media/shorts/control-the-input.mp4" poster="media/shorts/control-the-input.jpg" muted loop playsinline preload="none"></video>
+          <span class="sound" aria-hidden="true">🔇</span>
+          <figcaption><b>AI for sourcing? Control the input.</b><span>PhantomBuster webinar</span></figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="grid three" id="stage-grid">
+      <article class="card" data-type="webinar">
+        <span class="tag webinar">Webinar · PhantomBuster</span>
+        <h3>Reverse Sourcing &amp; Mapping</h3>
+        <p>Find companies that use your stack from their own job posts, then map the people who build it.</p>
+        <a class="go" href="#watch" data-play="webinar">Watch the replay</a>
+      </article>
+
+      <article class="card" data-type="webinar">
+        <span class="tag webinar">Webinar · Make</span>
+        <h3>Automating the Intake Meeting</h3>
+        <p>A live build: from intake notes to a role recap, a sourcing brief and a sharper job description.</p>
+        <a class="go" href="#watch" data-play="make">Watch the replay</a>
+      </article>
+
+      <article class="card" data-type="podcast">
+        <span class="tag podcast">Podcast · FR</span>
+        <h3>Tam Tam #81 : ATS à 100 % ?</h3>
+        <p>What it really takes to use an ATS at 100%: process design, adoption and data you can trust.</p>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:auto">
+          <a class="go" href="#watch" data-play="tamtam">Watch</a>
+          <a class="go" href="https://smartlink.ausha.co/tamtam" target="_blank" rel="noopener">Listen</a>
+        </div>
+      </article>
+
+      <article class="card" data-type="talk">
+        <span class="tag talk">Talk · SOSU Amsterdam · Oct 2026</span>
+        <h3>The AI-Powered Intake: What Happens to Recruiter Judgement?</h3>
+        <p>My talk at Sourcing Summit Europe, the European conference for sourcers and talent researchers.</p>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:auto">
+          <a class="go" href="#watch" data-play="sosu">Watch the full talk</a>
+          <a class="go" href="https://sourcingsummit.net/sosueu" target="_blank" rel="noopener">Event page</a>
+        </div>
+      </article>
+
+      <article class="card" data-type="talk">
+        <span class="soon">Upcoming</span>
+        <span class="tag talk">Panel</span>
+        <h3>Brainfood Live: Talent Ops &amp; Workflow Automation</h3>
+        <p>Year in Recruitment 2026, hosted by Hung Lee.</p>
+        <div class="when">11 December 2026</div>
+        <a class="go" href="https://www.linkedin.com/events/7518957019588870144/" target="_blank" rel="noopener">Register on LinkedIn</a>
+      </article>
+
+      <article class="card" data-type="writing">
+        <span class="tag writing">Article series · 3 parts</span>
+        <h3>Reverse sourcing, step by step</h3>
+        <p>Find the companies that use your stack from their own job posts, then run it all from a spreadsheet.</p>
+        <ol class="series">
+          <li><a href="https://medium.com/@drocher/reverse-sourcing-1-3-the-brain-linkedin-x-ray-job-queries-bb8dc9ed25b7" target="_blank" rel="noopener"><b>The brain</b><span>LinkedIn X-ray job queries</span></a></li>
+          <li><a href="https://medium.com/@drocher/reverse-sourcing-2-3-the-nervous-system-getting-the-results-out-of-google-713fd30f1f99" target="_blank" rel="noopener"><b>The nervous system</b><span>Getting the results out of Google</span></a></li>
+          <li><a href="https://medium.com/@drocher/reverse-sourcing-3-3-the-skeleton-running-it-with-google-sheets-e7ab57095744" target="_blank" rel="noopener"><b>The skeleton</b><span>Running it with Google Sheets</span></a></li>
+        </ol>
+      </article>
+
+      <article class="card" data-type="writing">
+        <span class="tag writing">Writing</span>
+        <h3>Sourcing &amp; RecOps on Medium</h3>
+        <p>Field notes on sourcing methods, ATS design and hiring automation.</p>
+        <a class="go" href="https://medium.com/@drocher" target="_blank" rel="noopener">All articles</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="built">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <h2>Open-source tools &amp; automations</h2>
+      </div>
+      <div class="chips" role="group" aria-label="Filter projects">
+        <button class="chip" data-p="all" aria-pressed="true">All</button>
+        <button class="chip" data-p="sourcing" aria-pressed="false">Sourcing</button>
+        <button class="chip" data-p="recops" aria-pressed="false">RecOps</button>
+        <button class="chip" data-p="ai" aria-pressed="false">AI</button>
+      </div>
+    </div>
+
+    <div class="grid three" id="proj-grid">
+      <article class="card proj" data-cat="sourcing ai">
+        <h3>Job reverse search skill</h3>
+        <p>A Claude skill and ChatGPT GPT: turn a job description into a Google X-ray of LinkedIn job posts, get one CSV of companies tagged Product, Staffing or Unsure.</p>
+        <div class="stack"><span class="pill">Claude</span><span class="pill">ChatGPT</span><span class="pill">Google X-ray</span></div>
+        <a class="go" href="https://github.com/diane-michaela/skill-PhantomBuster-job-reverse-search" target="_blank" rel="noopener">Repo &amp; download</a>
+      </article>
+
+      <article class="card proj" data-cat="sourcing recops ai">
+        <h3>Hiring skills for Claude Code</h3>
+        <p>Five Claude Code skills distilled from practitioners' published work: intake prep, LinkedIn Boolean search, X-ray search beyond LinkedIn, market mapping, and a brief-sharpening interviewer.</p>
+        <div class="stack"><span class="pill">Claude Code</span><span class="pill">Prompting</span><span class="pill">Sourcing</span></div>
+        <details><summary>Why skills</summary>
+          <p>Each skill fires when the ask matches what it's good at, and links back to the expert source it's built from. A shortcut to get started, not a substitute for the real material.</p>
+        </details>
+        <a class="go" href="https://github.com/diane-michaela/RecOps/tree/master/hiring_skills" target="_blank" rel="noopener">Skills on GitHub</a>
+      </article>
+
+      <article class="card proj" data-cat="sourcing">
+        <h3>LinkedIn ↔ GitHub bookmarklets</h3>
+        <p>One click on a LinkedIn profile finds the matching GitHub account, ranked by evidence. One click on GitHub finds the LinkedIn profile.</p>
+        <div class="stack"><span class="pill">JavaScript</span><span class="pill">GitHub API</span></div>
+        <details><summary>How it scores a match</summary>
+          <p>Signals add up: a LinkedIn link on the GitHub profile, a login that matches the LinkedIn URL, same name, same city, same company, commits under that name, languages that fit the stack.</p>
+        </details>
+        <a class="go" href="https://github.com/diane-michaela/coding_sourcer/tree/main/li-git-bookmarklets" target="_blank" rel="noopener">Code</a>
+      </article>
+
+      <article class="card proj" data-cat="sourcing">
+        <h3>Sourcing scripts</h3>
+        <p>Reusable Python templates to source from GitHub, Hugging Face, Meetup and ATS data.</p>
+        <div class="stack"><span class="pill">Python</span><span class="pill">APIs</span></div>
+        <a class="go" href="https://github.com/diane-michaela/coding_sourcer" target="_blank" rel="noopener">coding_sourcer</a>
+      </article>
+
+      <article class="card proj" data-cat="recops">
+        <h3>Intake meeting automation</h3>
+        <p>Intake notes go in; a Slack role recap, a sourcing brief and a revised job description come out. Saves about 6 hours per search.</p>
+        <div class="stack"><span class="pill">Make</span><span class="pill">Claude</span><span class="pill">Slack</span></div>
+        <a class="go" href="https://with-make.wistia.com/live/events/dkfryp5us8" target="_blank" rel="noopener">See the webinar</a>
+      </article>
+
+      <article class="card proj" data-cat="recops">
+        <h3>Weekly hiring dashboard</h3>
+        <p>Hiring metrics per role, every week, straight into the hiring Slack channel.</p>
+        <div class="stack"><span class="pill">Zapier</span><span class="pill">Teamtailor</span><span class="pill">Python</span></div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section id="career">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <h2>Career</h2>
+        <p>Click a role for details.</p>
+      </div>
+    </div>
+    <div class="timeline">
+      <div class="job open">
+        <button aria-expanded="true"><span><span class="t">Talent Acquisition Partner</span> · <span class="c">PhantomBuster</span></span><span class="d">Apr 2026 – now · Paris</span></button>
+        <ul>
+          <li>Full-cycle technical recruiting: 9 hires in my first quarter.</li>
+          <li>Rebuilt the ATS and the hiring process: time to fill down to 30 days.</li>
+          <li>Weekly hiring metrics dashboard per role (Teamtailor → Python → Slack).</li>
+          <li>Automated the intake meeting workflow: 6 hours saved per search.</li>
+          <li>Continuous job scraping per stack and department as talent intelligence for hiring manager briefs.</li>
+        </ul>
+      </div>
+      <div class="job">
+        <button aria-expanded="false"><span><span class="t">Senior Talent Acquisition, AVP</span> · <span class="c">RavenPack</span></span><span class="d">May 2021 – Apr 2026 · Marbella</span></button>
+        <ul>
+          <li>Led global recruitment strategy across Data Science, Development and Product.</li>
+          <li>Hired 150+ engineers in a niche, highly competitive fintech market.</li>
+          <li>Structured scorecards and metrics dashboards for hiring managers.</li>
+          <li>Zapier workflows from intake meeting to weekly ATS KPI reporting.</li>
+          <li>Mentored 3 recruiters; managed external sourcers and an agency.</li>
+        </ul>
+      </div>
+      <div class="job">
+        <button aria-expanded="false"><span><span class="t">Recruitment Specialist, NLP &amp; Voice</span> · <span class="c">GlobeTech</span></span><span class="d">Jun 2018 – Mar 2021 · Cork</span></button>
+        <ul>
+          <li>For a big-tech client: hundreds of hires across Europe and the US (NLP engineers, computational linguists, software engineers, QA and localization experts).</li>
+        </ul>
+      </div>
+      <div class="job">
+        <button aria-expanded="false"><span><span class="t">Senior Account Executive</span> · <span class="c">Indeed</span></span><span class="d">Jan 2016 – Mar 2018 · Dublin</span></button>
+        <ul>
+          <li>Grew enterprise accounts on the French market; advised HR teams on ROI and employer branding.</li>
+          <li>Developed and managed a portfolio of staffing clients.</li>
+          <li>Sold PPC recruitment solutions and advised on hiring strategies.</li>
+          <li>Drove new business through outbound prospecting.</li>
+          <li class="focus">Focus: outbound prospecting · client acquisition · portfolio development</li>
+        </ul>
+      </div>
+      <div class="job">
+        <button aria-expanded="false"><span><span class="t">IT Recruitment Consultant</span> · <span class="c">Econocom</span></span><span class="d">Feb 2014 – Jan 2016 · Vélizy</span></button>
+        <ul>
+          <li>Recruited system engineers and Oracle DBAs.</li>
+          <li>Banking, finance and industrial positions.</li>
+        </ul>
+      </div>
+      <div class="job">
+        <button aria-expanded="false"><span><span class="t">IT Recruitment Consultant, Sourcing</span> · <span class="c">Helpline</span></span><span class="d">Apr 2013 – Mar 2014 · Puteaux</span></button>
+        <ul>
+          <li>Recruited IT support from level 0 to 3.</li>
+          <li>Sourcing for multilingual helpdesk roles.</li>
+        </ul>
+      </div>
+      <div class="job">
+        <button aria-expanded="false"><span><span class="t">Junior Recruitment &amp; HR, short-term contract</span> · <span class="c">Amazon</span></span><span class="d">Sep 2011 – Dec 2011 · Ormes</span></button>
+        <ul><li>Recruitment for picking and packing roles.</li></ul>
+      </div>
+      <div class="job">
+        <button aria-expanded="false"><span><span class="t">Trainee Recruitment &amp; HR</span> · <span class="c">Saint-Gobain</span></span><span class="d">Jan 2011 – Aug 2011 · Orléans</span></button>
+        <ul><li>Point P division.</li></ul>
+      </div>
+    </div>
+
+    <h3 style="font-size:22px;margin:40px 0 14px">Learning &amp; certifications</h3>
+    <div class="grid three">
+      <article class="card">
+        <span class="tag webinar">Web scraping · ongoing</span>
+        <h3>Web scraping</h3>
+        <p>One-to-one courses on Preply.</p>
+        <div class="when">Ongoing</div>
+      </article>
+      <article class="card">
+        <span class="tag webinar">Python</span>
+        <h3>Python courses</h3>
+        <p>One-to-one courses on Preply.</p>
+        <div class="when">2025 – 2026</div>
+      </article>
+      <article class="card">
+        <span class="tag webinar">Computer science · unfinished</span>
+        <h3>CS50: Introduction to Computer Science</h3>
+        <p>Harvard's introduction to computer science, on edX.</p>
+        <div class="when">2021</div>
+        <a class="go" href="https://www.edx.org/cs50" target="_blank" rel="noopener">Course page</a>
+      </article>
+      <article class="card">
+        <span class="tag talk">Certification</span>
+        <h3>SheCodes Basics</h3>
+        <p>HTML, CSS, JavaScript and VS Code.</p>
+        <a class="go" href="https://www.shecodes.io/users/48703-diane-rocher" target="_blank" rel="noopener">SheCodes profile</a>
+      </article>
+      <article class="card">
+        <span class="tag talk">Certification</span>
+        <h3>Carnegie Sales Edge</h3>
+        <p>Sales training certification.</p>
+        <div class="when">2017</div>
+      </article>
+      <article class="card">
+        <span class="tag writing">Degree</span>
+        <h3>Bachelor's degree, Human Resources</h3>
+        <p>Saint-Paul Bourdon Blanc.</p>
+        <div class="when">2008 – 2011</div>
+      </article>
+    </div>
+
+    <div class="skills" style="margin-top:36px">
+      <div><h3>Recruiting</h3><div class="stack"><span class="pill">AI, engineering, data, product</span><span class="pill">Reverse sourcing</span><span class="pill">Market mapping</span><span class="pill">Employer branding</span><span class="pill">Coaching</span></div></div>
+      <div><h3>RecOps &amp; data</h3><div class="stack"><span class="pill">ATS design</span><span class="pill">Process design</span><span class="pill">Recruiting analytics</span></div></div>
+      <div><h3>Automation &amp; AI</h3><div class="stack"><span class="pill">Python</span><span class="pill">Claude Code</span><span class="pill">Web scraping</span><span class="pill">Make</span><span class="pill">Zapier</span><span class="pill">Apify</span><span class="pill">PhantomBuster</span></div></div>
+      <div><h3>ATS</h3><div class="stack"><span class="pill">Teamtailor</span><span class="pill">iCIMS</span><span class="pill">PeopleSoft</span></div></div>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <h2>Let's talk</h2>
+    <div class="cta" style="margin-top:16px">
+      <a class="btn primary" id="mail" href="#contact">Email me</a>
+      <a class="btn" href="https://www.linkedin.com/in/diane-rocher-87b4a027" target="_blank" rel="noopener">LinkedIn</a>
+      <a class="btn" href="https://github.com/diane-michaela" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <div class="small">© <span id="y">2026</span> Diane Rocher · Built with plain HTML, hosted on GitHub Pages.</div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  /* theme */
+  var root = document.documentElement, KEY = 'theme';
+  try { var saved = localStorage.getItem(KEY); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+  document.getElementById('theme').addEventListener('click', function () {
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    var next = dark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  });
+
+  /* filters */
+  function filter(btnAttr, grid, cardAttr) {
+    var btns = document.querySelectorAll('[' + btnAttr + ']');
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var f = b.getAttribute(btnAttr);
+        btns.forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        document.querySelectorAll('#' + grid + ' .card').forEach(function (c) {
+          var vals = (c.getAttribute(cardAttr) || '').split(' ');
+          c.classList.toggle('hidden', f !== 'all' && vals.indexOf(f) < 0);
+        });
+      });
+    });
+  }
+  filter('data-f', 'stage-grid', 'data-type');
+  filter('data-p', 'proj-grid', 'data-cat');
+
+
+  /* video player: local mp4 for talks, YouTube loaded only on click */
+  var VIDEOS = [
+    { id: 'webinar', type: 'webinar', title: 'Reverse Sourcing & Mapping', where: 'PhantomBuster webinar · Nov 2026 · 55 min',
+      desc: 'From job posts to a company map by stack, then to the people who build it.',
+      src: 'media/reverse-sourcing-webinar.mp4', poster: 'media/webinar-poster.jpg' },
+    { id: 'make', type: 'webinar', title: 'Hiring: from intake meeting recording to structured data', where: 'Make Community Live Session · Oct 2026 · 53 min',
+      desc: 'A live build of the backbone of an AI hiring pipeline: the intake recording becomes structured data, a role recap and a sourcing brief.',
+      src: 'media/make-intake-webinar.mp4', poster: 'media/make-poster.jpg' },
+    { id: 'tamtam', type: 'podcast', title: 'Utilisez-vous vraiment votre ATS à 100 % ?', where: 'Tam Tam #81 · Good Morning Blendy · podcast (FR) · 43 min',
+      desc: 'A conversation in French about ATS adoption, process and data. Shared with permission from Good Morning Blendy.',
+      src: 'media/tamtam-81.mp4', poster: 'media/tamtam-poster.jpg' },
+    { id: 'sosu', type: 'talk', title: 'The AI-Powered Intake: What Happens to Recruiter Judgement?', where: 'Sourcing Summit Europe · Amsterdam · Oct 2026 · 30 min',
+      desc: 'The recruiter defines the need in the room; an automated workflow carries it forward. Where judgement stays human.',
+      src: 'media/sosu-2026-talk.mp4', poster: 'media/sosu-poster.jpg' }
+  ];
+  var screen = document.getElementById('screen'), now = document.getElementById('now'),
+      pl = document.getElementById('playlist');
+  function esc(s) { return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function load(i, autoplay) {
+    var v = VIDEOS[i];
+    pl.querySelectorAll('.track').forEach(function (t, j) { t.setAttribute('aria-pressed', String(i === j)); });
+    now.innerHTML = '<h3>' + esc(v.title) + '</h3><p>' + esc(v.where) + '</p><p>' + esc(v.desc) + '</p>';
+    screen.innerHTML = '';
+    if (v.yt) {
+      var f = document.createElement('button');
+      f.className = 'facade'; f.setAttribute('aria-label', 'Play ' + v.title);
+      f.style.backgroundImage = 'url(' + v.poster + ')';
+      f.addEventListener('click', function () {
+        screen.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + v.yt +
+          '?autoplay=1&rel=0" title="' + esc(v.title) + '" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+      });
+      screen.appendChild(f);
+    } else {
+      var vid = document.createElement('video');
+      vid.controls = true; vid.preload = 'none'; vid.poster = v.poster; vid.playsInline = true;
+      vid.src = v.src; vid.setAttribute('aria-label', v.title);
+      screen.appendChild(vid);
+      if (autoplay) vid.play().catch(function () {});
+    }
+  }
+  VIDEOS.forEach(function (v, i) {
+    var b = document.createElement('button');
+    b.className = 'track'; b.type = 'button';
+    b.innerHTML = '<img src="' + v.poster + '" alt="" loading="lazy"><div><b>' + esc(v.title) + '</b><span>' + esc(v.where) + '</span></div>';
+    b.addEventListener('click', function () { load(i, true); });
+    pl.appendChild(b);
+  });
+  load(0, false);
+
+  /* the stage chips also filter the player: only matching videos in the playlist,
+     and Writing swaps the player for a picture of the Medium page */
+  function playerFilter(f) {
+    var first = -1;
+    pl.style.display = f === 'writing' ? 'none' : '';
+    document.getElementById('reading').hidden = f !== 'writing';
+    pl.querySelectorAll('.track').forEach(function (t, i) {
+      var ok = f === 'all' || VIDEOS[i].type === f;
+      t.style.display = ok ? '' : 'none';
+      if (ok && first < 0) first = i;
+    });
+    if (f === 'writing') {
+      screen.innerHTML = '<a href="https://medium.com/@drocher" target="_blank" rel="noopener" class="still">' +
+        '<img src="media/medium.png" alt="Diane Rocher\'s Medium page: How can Recruiters use Vibe Coding, and the Reverse sourcing series"></a>';
+      now.innerHTML = '<h3>Writing on Medium</h3><p>medium.com/@drocher</p>' +
+        '<p>Field notes on sourcing, RecOps and vibe coding, including the 3-part reverse sourcing series.</p>';
+    } else if (first >= 0) {
+      load(first, false);
+    }
+  }
+  document.querySelectorAll('[data-f]').forEach(function (b) {
+    b.addEventListener('click', function () { playerFilter(b.getAttribute('data-f')); shortsFilter(b.getAttribute('data-f')); });
+  });
+
+  /* shorts: play muted while on screen (like reels), tap for sound, only one with sound at a time */
+  var shorts = Array.prototype.slice.call(document.querySelectorAll('.short'));
+  function shortsFilter(f) {
+    var any = false;
+    shorts.forEach(function (s) {
+      var ok = f === 'all' || s.getAttribute('data-type') === f;
+      s.classList.toggle('hidden', !ok);
+      if (!ok) s.querySelector('video').pause(); else any = true;
+    });
+    document.getElementById('shorts').style.display = any ? '' : 'none';
+    row.scrollLeft = 0; navState();
+  }
+  var row = document.getElementById('shorts-row'),
+      prev = document.getElementById('sh-prev'), next = document.getElementById('sh-next');
+  function step() { var c = row.querySelector('.short:not(.hidden)'); return c ? c.offsetWidth + 14 : 240; }
+  function navState() {
+    prev.disabled = row.scrollLeft < 5;
+    next.disabled = row.scrollLeft + row.clientWidth >= row.scrollWidth - 5;
+  }
+  prev.addEventListener('click', function () { row.scrollBy({ left: -step(), behavior: 'smooth' }); });
+  next.addEventListener('click', function () { row.scrollBy({ left: step(), behavior: 'smooth' }); });
+  row.addEventListener('scroll', navState, { passive: true });
+  window.addEventListener('resize', navState);
+  navState();
+  function setSound(s, on) {
+    var v = s.querySelector('video');
+    v.muted = !on; s.classList.toggle('on', on);
+    s.querySelector('.sound').textContent = on ? '🔊' : '🔇';
+    if (on) { v.currentTime = 0; v.play().catch(function () {}); }
+  }
+  shorts.forEach(function (s) {
+    s.setAttribute('role', 'button'); s.tabIndex = 0;
+    s.setAttribute('aria-label', 'Play with sound: ' + s.querySelector('b').textContent);
+    function toggle() {
+      var on = !s.classList.contains('on');
+      shorts.forEach(function (o) { if (o !== s) setSound(o, false); });
+      setSound(s, on);
+    }
+    s.addEventListener('click', toggle);
+    s.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  });
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+    var sio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        var v = en.target.querySelector('video');
+        if (en.isIntersecting) v.play().catch(function () {}); else { v.pause(); setSound(en.target, false); }
+      });
+    }, { threshold: .6 });
+    shorts.forEach(function (s) { sio.observe(s); });
+  }
+
+  document.querySelectorAll('[data-play]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var i = VIDEOS.map(function (v) { return v.id; }).indexOf(a.getAttribute('data-play'));
+      document.getElementById('watch').scrollIntoView({ behavior: 'smooth' });
+      load(i, true);
+    });
+  });
+
+  /* career accordion */
+  document.querySelectorAll('.job button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var job = b.parentElement, open = !job.classList.contains('open');
+      job.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
+    });
+  });
+
+  /* count-up stats */
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce && 'IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var el = en.target, end = +el.dataset.count, suf = el.dataset.suffix || '', t0 = null;
+        function tick(t) {
+          if (!t0) t0 = t;
+          var p = Math.min((t - t0) / 900, 1);
+          el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3))) + suf;
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick); io.unobserve(el);
+      });
+    }, { threshold: .6 });
+    document.querySelectorAll('[data-count]').forEach(function (el) { io.observe(el); });
+  }
+
+  /* email assembled in the browser so scrapers don't pick it up from the source */
+  var u = 'dianemichaela88', d = 'gmail.com';
+  document.getElementById('mail').href = 'mailto:' + u + '@' + d;
+  document.getElementById('y').textContent = new Date().getFullYear();
+})();
+</script>
+</body>
+</html>
