@@ -324,6 +324,16 @@ footer p { color: var(--muted); max-width: 560px; }
           <span class="sound" aria-hidden="true">🔇</span>
           <figcaption><b>Human in the loop isn't clicking "approve".</b><span>Sourcing Summit Amsterdam</span></figcaption>
         </figure>
+        <figure class="short" data-type="podcast">
+          <video src="media/shorts/tamtam-configuration.mp4" poster="media/shorts/tamtam-configuration.jpg" muted loop playsinline preload="none"></video>
+          <span class="sound" aria-hidden="true">🔇</span>
+          <figcaption><b>Un nouvel outil pour ton ATS ? Souvent, c'est juste de la configuration.</b><span>Tam Tam #81 · podcast (FR)</span></figcaption>
+        </figure>
+        <figure class="short" data-type="webinar">
+          <video src="media/shorts/make-second-meeting.mp4" poster="media/shorts/make-second-meeting.jpg" muted loop playsinline preload="none"></video>
+          <span class="sound" aria-hidden="true">🔇</span>
+          <figcaption><b>After every intake meeting: 2.5 hours of admin.</b><span>Make Community Live</span></figcaption>
+        </figure>
         <figure class="short" data-type="webinar">
           <video src="media/shorts/confident-noise.mp4" poster="media/shorts/confident-noise.jpg" muted loop playsinline preload="none"></video>
           <span class="sound" aria-hidden="true">🔇</span>
@@ -703,20 +713,14 @@ footer p { color: var(--muted); max-width: 560px; }
     b.addEventListener('click', function () { playerFilter(b.getAttribute('data-f')); shortsFilter(b.getAttribute('data-f')); });
   });
 
-  /* shorts: play muted while on screen (like reels), tap for sound, only one with sound at a time */
+  /* shorts: only ONE reel moves at a time. Before any click it is the first one (muted preview);
+     clicking another makes that one play with sound and every other reel, the first included,
+     stays still on its first image. */
   var shorts = Array.prototype.slice.call(document.querySelectorAll('.short'));
-  function shortsFilter(f) {
-    var any = false;
-    shorts.forEach(function (s) {
-      var ok = f === 'all' || s.getAttribute('data-type') === f;
-      s.classList.toggle('hidden', !ok);
-      if (!ok) s.querySelector('video').pause(); else any = true;
-    });
-    document.getElementById('shorts').style.display = any ? '' : 'none';
-    row.scrollLeft = 0; navState();
-  }
-  var row = document.getElementById('shorts-row'),
+  var row = document.getElementById('shorts-row'), wrap = document.getElementById('shorts'),
       prev = document.getElementById('sh-prev'), next = document.getElementById('sh-next');
+  var current = shorts[0], inView = false,
+      motionOk = !matchMedia('(prefers-reduced-motion: reduce)').matches;
   function step() { var c = row.querySelector('.short:not(.hidden)'); return c ? c.offsetWidth + 14 : 240; }
   function navState() {
     prev.disabled = row.scrollLeft < 5;
@@ -727,31 +731,58 @@ footer p { color: var(--muted); max-width: 560px; }
   row.addEventListener('scroll', navState, { passive: true });
   window.addEventListener('resize', navState);
   navState();
-  function setSound(s, on) {
-    var v = s.querySelector('video');
-    v.muted = !on; s.classList.toggle('on', on);
-    s.querySelector('.sound').textContent = on ? '🔊' : '🔇';
-    if (on) { v.currentTime = 0; v.play().catch(function () {}); }
+
+  function icon(s, on) { s.classList.toggle('on', on); s.querySelector('.sound').textContent = on ? '🔊' : '🔇'; }
+  function rest(o) {                       /* still, silent, on its first real image */
+    var v = o.querySelector('video');
+    v.pause(); v.muted = true; icon(o, false);
+    try { v.currentTime = 0.5; } catch (e) {}  /* frame 0 is black (fade-in) */
   }
+  function run(s, sound) {                 /* the only reel that moves */
+    shorts.forEach(function (o) { if (o !== s) rest(o); });
+    current = s;
+    var v = s.querySelector('video');
+    v.muted = !sound; icon(s, sound);
+    if (sound) { try { v.currentTime = 0; } catch (e) {} }
+    v.play().catch(function () {});
+  }
+  function shortsFilter(f) {
+    var first = null;
+    shorts.forEach(function (s) {
+      var ok = f === 'all' || s.getAttribute('data-type') === f;
+      s.classList.toggle('hidden', !ok);
+      rest(s);
+      if (ok && !first) first = s;
+    });
+    wrap.style.display = first ? '' : 'none';
+    row.scrollLeft = 0; navState();
+    if (first) { current = first; if (inView && motionOk) run(first, false); }
+  }
+  /* the big player starting stops every reel, the first one included */
+  screen.addEventListener('play', function () { shorts.forEach(rest); }, true);
+
   shorts.forEach(function (s) {
     s.setAttribute('role', 'button'); s.tabIndex = 0;
     s.setAttribute('aria-label', 'Play with sound: ' + s.querySelector('b').textContent);
     function toggle() {
-      var on = !s.classList.contains('on');
-      shorts.forEach(function (o) { if (o !== s) setSound(o, false); });
-      setSound(s, on);
+      var main = screen.querySelector('video'); if (main) main.pause();
+      var v = s.querySelector('video');
+      if (s !== current || v.paused) run(s, true);          /* new reel: play it with sound */
+      else if (v.muted) run(s, true);                        /* first reel previewing: add sound from the start */
+      else { v.muted = true; icon(s, false); }               /* same reel again: sound off, keeps moving */
     }
     s.addEventListener('click', toggle);
     s.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
   });
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
-    var sio = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        var v = en.target.querySelector('video');
-        if (en.isIntersecting) v.play().catch(function () {}); else { v.pause(); setSound(en.target, false); }
-      });
-    }, { threshold: .6 });
-    shorts.forEach(function (s) { sio.observe(s); });
+
+  shorts.forEach(rest);
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      inView = entries[0].isIntersecting;
+      var v = current.querySelector('video');
+      if (!inView) { v.pause(); v.muted = true; icon(current, false); }
+      else if (motionOk) v.play().catch(function () {});
+    }, { threshold: .4 }).observe(row);
   }
 
   document.querySelectorAll('[data-play]').forEach(function (a) {
