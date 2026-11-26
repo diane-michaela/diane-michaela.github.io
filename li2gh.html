@@ -70,8 +70,27 @@
     if (!cache.has(path)) cache.set(path, apiRaw(path).catch(e => { cache.delete(path); throw e; }));
     return cache.get(path);
   };
+  /* LinkedIn often gives the suburb (Boulogne-Billancourt), GitHub the city (Paris): same metro area counts as the same place. */
+  const METROS = {
+    paris: ['ile de france', 'greater paris', 'boulogne billancourt', 'issy les moulineaux', 'levallois perret', 'neuilly sur seine', 'courbevoie', 'puteaux', 'la defense', 'nanterre', 'rueil malmaison', 'suresnes', 'saint cloud', 'sevres', 'meudon', 'clichy', 'montrouge', 'malakoff', 'vanves', 'clamart', 'chatillon', 'bagneux', 'ivry sur seine', 'vitry sur seine', 'montreuil', 'vincennes', 'saint mande', 'pantin', 'saint denis', 'saint ouen', 'aubervilliers', 'charenton le pont', 'creteil', 'versailles', 'massy', 'palaiseau', 'saclay', 'gif sur yvette', 'orsay', 'velizy villacoublay', 'guyancourt', 'cergy', 'argenteuil', 'colombes', 'asnieres sur seine', 'gennevilliers', 'bois colombes', 'la garenne colombes', 'noisy le grand', 'champs sur marne', 'marne la vallee'],
+    lyon: ['villeurbanne', 'ecully', 'bron', 'venissieux', 'vaulx en velin', 'caluire et cuire', 'limonest', 'dardilly'],
+    lille: ['roubaix', 'tourcoing', 'villeneuve d ascq', 'lambersart', 'marcq en baroeul'],
+    toulouse: ['blagnac', 'labege', 'colomiers', 'balma', 'ramonville saint agne'],
+    bordeaux: ['merignac', 'pessac', 'talence', 'begles'],
+    nantes: ['saint herblain', 'reze', 'orvault', 'carquefou'],
+    grenoble: ['meylan', 'montbonnot saint martin', 'echirolles', 'saint martin d heres'],
+    nice: ['sophia antipolis', 'valbonne', 'biot', 'antibes'],
+    rennes: ['cesson sevigne'],
+    montpellier: ['lattes', 'castelnau le lez'],
+  };
+  const placeKey = s => norm(s).replace(/[-'’]/g, ' ').replace(/\s+/g, ' ').trim();
+  const metroOf = city => { const k = placeKey(city); if (!k) return ''; return Object.keys(METROS).find(m => k === m || METROS[m].includes(k)) || ''; };
+  const sameMetro = (m, loc) => !!m && (loc.includes(m) || METROS[m].some(x => loc.includes(x)) || (m === 'paris' && /\bidf\b/.test(loc)));
+
   const orgMembers = new Set();
   const commitAuthors = new Map();
+  const orgCommitAuthors = new Set();
+  let orgSlugUsed = '';
   let loginBase = '';
   const nameParts = () => noAccents(clean($('n').value)).toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(Boolean);
 
@@ -84,11 +103,14 @@
     if (vanityBase.length >= 4 && login === vanityBase.toLowerCase().replace(/-/g, '')) { s += 4; why.push('login = URL LinkedIn'); }
     else if (loginBase.length >= 5 && login.startsWith(loginBase)) { s += 1; why.push('login ≈ nom'); }
     if (n && norm(u.name) === n) { s += 3; why.push('nom exact'); }
-    if (l && norm(u.location).includes(l)) { s += 2; why.push('lieu'); }
+    const gl = placeKey(u.location), m = metroOf(l);
+    if (l && gl.includes(placeKey(l))) { s += 2; why.push('lieu'); }
+    else if (l && sameMetro(m, gl)) { s += 2; why.push('lieu (agglo ' + m + ')'); }
     if (c.length >= 3 && text.includes(c)) { s += 3; why.push('entreprise'); }
     if (orgMembers.has(u.login.toLowerCase())) { s += 2; why.push('membre org GitHub'); }
     const nc = commitAuthors.get(u.login.toLowerCase());
     if (nc) { s += 4; why.push(nc + ' commit(s) signé(s) du nom'); }
+    if (orgCommitAuthors.has(u.login.toLowerCase())) { s += 3; why.push('commits dans l’org ' + orgSlugUsed); }
     const langs = (u.langs || []).filter(x => stack.includes(x));
     if (langs.length) { s += 2; why.push('stack ' + langs.join('/')); }
     return { s, why };
@@ -102,7 +124,9 @@
     loginBase = parts.length >= 2 ? parts[0] + parts[1] : '';
     try {
       const n = clean($('n').value), l = clean($('l').value), q = loc => 'fullname:"' + n + '"' + (loc ? ' location:"' + loc + '"' : '');
+      const metro = metroOf(l), metroAlt = metro && metro !== placeKey(l) ? metro : '';
       let res = await api('/search/users?per_page=6&q=' + encodeURIComponent(q(l)));
+      if (!res.items.length && metroAlt) res = await api('/search/users?per_page=6&q=' + encodeURIComponent(q(metroAlt)));
       if (!res.items.length && l) res = await api('/search/users?per_page=6&q=' + encodeURIComponent(q('')));
       if (!res.items.length && noAccents(n) !== n) res = await api('/search/users?per_page=6&q=' + encodeURIComponent('fullname:"' + noAccents(n) + '"'));
       const logins = res.items.map(i => i.login);
@@ -120,6 +144,12 @@
         [...commitAuthors.keys()].slice(0, 5).forEach(add);
       }
       const orgSlug = norm($('c').value).replace(/[^a-z0-9]/g, '');
+      orgCommitAuthors.clear(); orgSlugUsed = orgSlug;
+      /* Commits signed with the name inside the company's repos: works even when org membership is hidden. */
+      if (orgSlug.length >= 3 && parts.length >= 2 && parts.every(x => x.length >= 3)) {
+        const oc = await api('/search/commits?per_page=30&q=' + encodeURIComponent('author-name:"' + n + '" org:' + orgSlug)).catch(() => ({ items: [] }));
+        oc.items.forEach(i => { const lg = i.author && i.author.login; if (lg) { orgCommitAuthors.add(lg.toLowerCase()); add(lg); } });
+      }
       orgMembers.clear();
       if (orgSlug.length >= 3 && parts[0]) {
         const members = await api('/orgs/' + orgSlug + '/public_members?per_page=100').catch(() => []);
@@ -135,7 +165,7 @@
       const users = await Promise.all(logins.map(async login => {
         const u = await api('/users/' + login);
         const repos = await api('/users/' + login + '/repos?per_page=30&sort=pushed').catch(() => []);
-        u.langs = [...new Set(repos.map(r => (r.language || '').toLowerCase()).filter(Boolean))];
+        u.langs = [...new Set(repos.filter(r => !r.fork).map(r => (r.language || '').toLowerCase()).filter(Boolean))];
         return u;
       }));
       const ranked = users.map(u => Object.assign(u, score(u))).sort((a, b) => b.s - a.s);
