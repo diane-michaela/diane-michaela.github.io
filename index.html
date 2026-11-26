@@ -216,6 +216,8 @@ section { padding: 48px 0; }
 .short.on figcaption { opacity: 0; }
 .short.hidden { display: none; }
 
+#watch { scroll-margin-top: 72px; }
+
 /* player */
 .player { display: grid; gap: 14px; grid-template-columns: 1fr; margin-bottom: 28px; }
 @media (min-width: 900px) { .player { grid-template-columns: 2fr 1fr; } }
@@ -501,7 +503,7 @@ footer p { color: var(--muted); max-width: 560px; }
         <button aria-expanded="false"><span><span class="t">Senior Talent Acquisition, AVP</span> · <span class="c">RavenPack</span></span><span class="d">May 2021 – Apr 2026 · Marbella</span></button>
         <ul>
           <li>Led global recruitment strategy across Data Science, Development and Product.</li>
-          <li>Hired 150+ engineers in a niche, highly competitive fintech market.</li>
+          <li>Hired 150+ people (about 30 a year), around 100 of them engineers, in a niche, highly competitive fintech market.</li>
           <li>Structured scorecards and metrics dashboards for hiring managers.</li>
           <li>Zapier workflows from intake meeting to weekly ATS KPI reporting.</li>
           <li>Mentored 3 recruiters; managed external sourcers and an agency.</li>
@@ -793,6 +795,31 @@ footer p { color: var(--muted); max-width: 560px; }
       load(i, true);
     });
   });
+
+  /* direct links to one video, e.g. diane-michaela.github.io/#sosu (used by the CV buttons):
+     selects the right filter, loads that video in the player and scrolls to it */
+  var DEEP = { sosu: ['talk', 'sosu'], talk: ['talk', 'sosu'],
+               'reverse-sourcing': ['webinar', 'webinar'], make: ['webinar', 'make'],
+               tamtam: ['podcast', 'tamtam'] };
+  function openFromHash(e) {
+    var d = DEEP[location.hash.slice(1)];
+    if (!d) return;
+    var chip = document.querySelector('[data-f="' + d[0] + '"]');
+    if (chip) chip.click();
+    var i = VIDEOS.map(function (v) { return v.id; }).indexOf(d[1]);
+    if (i >= 0) load(i, false);
+    function go(smooth) {
+      var y = document.getElementById('stage').getBoundingClientRect().top + window.pageYOffset - 64;
+      window.scrollTo({ top: y, behavior: smooth ? 'smooth' : 'auto' });
+    }
+    if (e) { go(true); return; }
+    /* first load: jump once the layout is ready, again after fonts/posters have settled */
+    requestAnimationFrame(function () { go(false); });
+    window.addEventListener('load', function () { go(false); });
+  }
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.addEventListener('hashchange', openFromHash);
+  openFromHash();
 
   /* career accordion */
   document.querySelectorAll('.job button').forEach(function (b) {
