@@ -1087,11 +1087,24 @@ function track(path, title) {
   });
 
   /* career accordion */
+  /* with a mouse, pointing at a role opens it (it stays open, so the list never jumps
+     under the cursor); click still toggles, and works alone on phones */
+  var canHover = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches;
   document.querySelectorAll('.job button').forEach(function (b) {
+    var job = b.parentElement, timer, hoverOpenedAt = 0;
+    function setOpen(open) { job.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open)); }
     b.addEventListener('click', function () {
-      var job = b.parentElement, open = !job.classList.contains('open');
-      job.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
+      if (Date.now() - hoverOpenedAt < 800) return; /* just opened by hover: don't close it again */
+      setOpen(!job.classList.contains('open'));
     });
+    if (canHover) {
+      b.addEventListener('mouseenter', function () {
+        timer = setTimeout(function () {
+          if (!job.classList.contains('open')) { setOpen(true); hoverOpenedAt = Date.now(); }
+        }, 120);
+      });
+      b.addEventListener('mouseleave', function () { clearTimeout(timer); });
+    }
   });
 
   /* count-up stats */
