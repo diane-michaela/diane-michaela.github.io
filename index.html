@@ -247,6 +247,16 @@ section { padding: 48px 0; }
 .ask-dlg p b { color: var(--text); font-weight: 600; }
 .ask-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .ask-row .btn { cursor: pointer; font: inherit; font-weight: 600; }
+.ask-row .btn:disabled { opacity: .6; cursor: default; }
+.ask-in { display: block; width: 100%; box-sizing: border-box; margin: 0 0 10px; padding: 11px 14px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font: 500 15px Inter, sans-serif; }
+.ask-in:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ask-hp { position: absolute; left: -9999px; }
+.ask-dlg p.ask-note { font-size: 12px; margin: 2px 0 6px; }
+.ask-dlg p.ask-msg { min-height: 18px; font-size: 13px; margin: 0 0 10px; }
+.ask-dlg p.ask-msg.bad { color: #c2410c; }
+textarea.ask-in { resize: vertical; min-height: 110px; text-align: left; }
+.ask-in[hidden] { display: none; }
 
 /* player */
 .player { display: grid; gap: 14px; grid-template-columns: 1fr; margin-bottom: 28px; }
@@ -763,27 +773,111 @@ function track(path, title) {
       });
     });
   }
-  /* "Ask Diane for the code" pop-up: the code is sent on LinkedIn */
-  var askDlg;
+  /* Contact pop-up, used by "Ask Diane for the code" (askPopup) and "Email me" (contactPopup).
+     The visitor leaves an email, Web3Forms emails Diane (reply-to = the visitor).
+     The access key is public by design: it only lets this form send to Diane's inbox,
+     it does not reveal her address. */
+  var WEB3FORMS_KEY = 'c61fa30c-bbf3-4187-8519-0b456857c148';
+  var formDlg, formCtx;
   function askPopup(v) {
-    if (!askDlg) {
-      askDlg = document.createElement('dialog');
-      askDlg.className = 'ask-dlg';
-      askDlg.innerHTML =
-        '<div class="ask-ico" aria-hidden="true">✓</div>' +
-        '<h3>Code requested</h3>' +
-        '<p>Diane shares the code on LinkedIn. Connect with her and mention <b class="ask-talk"></b>: she will send you the code there.</p>' +
+    openForm({
+      title: 'Ask for the code', icon: '✉',
+      intro: 'Leave your email and Diane will send you the code for <b>"' + esc(v.title) + '"</b>.',
+      note: 'Your email is only used to send you the code.',
+      send: 'Send request', message: false,
+      doneTitle: 'Code requested', doneText: 'Thanks! Diane will email you the code soon.',
+      subject: 'Code request: ' + v.title,
+      body: function (name, email) { return (name || 'Someone') + ' (' + email + ') asked for the code to watch "' + v.title + '". Reply to this email to send it.'; },
+      event: ['code-' + v.id + '-requested', 'Code request sent: ' + v.title]
+    });
+  }
+  function contactPopup() {
+    openForm({
+      title: 'Email Diane', icon: '✉',
+      intro: 'Write your message and Diane will reply to your email.',
+      note: 'Your email is only used to reply to you.',
+      send: 'Send message', message: true,
+      doneTitle: 'Message sent', doneText: 'Thanks! Diane will get back to you soon.',
+      subject: 'Message from diane-michaela.github.io',
+      body: function (name, email, msg) { return (name || 'Someone') + ' (' + email + ') wrote:\n\n' + msg; },
+      event: ['contact-sent', 'Contact message sent']
+    });
+  }
+  function openForm(c) {
+    formCtx = c;
+    if (!formDlg) {
+      formDlg = document.createElement('dialog');
+      formDlg.className = 'ask-dlg';
+      formDlg.innerHTML =
+        '<form class="ask-form">' +
+        '<div class="ask-ico" aria-hidden="true"></div>' +
+        '<h3 class="ask-title"></h3>' +
+        '<p class="ask-intro"></p>' +
+        '<input class="ask-in" type="text" name="name" placeholder="Your name" autocomplete="name" aria-label="Your name">' +
+        '<input class="ask-in" type="email" name="email" placeholder="Your email" autocomplete="email" aria-label="Your email" required>' +
+        '<textarea class="ask-in" name="message" rows="5" placeholder="Your message" aria-label="Your message"></textarea>' +
+        '<input type="checkbox" name="botcheck" class="ask-hp" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+        '<p class="ask-note"></p>' +
+        '<p class="ask-msg" role="status"></p>' +
         '<div class="ask-row">' +
-        '<a class="btn primary ask-li" href="https://www.linkedin.com/in/diane-rocher-87b4a027" target="_blank" rel="noopener">Connect with Diane on LinkedIn</a>' +
-        '<button type="button" class="btn ask-close">Close</button></div>';
-      document.body.appendChild(askDlg);
-      askDlg.querySelector('.ask-close').addEventListener('click', function () { askDlg.close(); });
-      askDlg.addEventListener('click', function (e) { if (e.target === askDlg) askDlg.close(); });
+        '<button type="submit" class="btn primary ask-send"></button>' +
+        '<button type="button" class="btn ask-close">Cancel</button></div>' +
+        '</form>' +
+        '<div class="ask-done" hidden>' +
+        '<div class="ask-ico" aria-hidden="true">✓</div>' +
+        '<h3 class="ask-done-title"></h3>' +
+        '<p class="ask-done-text"></p>' +
+        '<div class="ask-row"><button type="button" class="btn primary ask-close">Close</button></div>' +
+        '</div>';
+      document.body.appendChild(formDlg);
+      formDlg.querySelectorAll('.ask-close').forEach(function (b) { b.addEventListener('click', function () { formDlg.close(); }); });
+      formDlg.addEventListener('click', function (e) { if (e.target === formDlg) formDlg.close(); });
+      var form = formDlg.querySelector('form'), status = formDlg.querySelector('.ask-msg'), send = formDlg.querySelector('.ask-send');
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (form.querySelector('[name=botcheck]').checked) return;
+        var k = formCtx,
+            name = form.querySelector('[name=name]').value.trim(),
+            email = form.querySelector('[name=email]').value.trim(),
+            text = form.querySelector('[name=message]').value.trim();
+        if (k.message && !text) { form.querySelector('[name=message]').focus(); return; }
+        send.disabled = true; status.className = 'ask-msg'; status.textContent = 'Sending…';
+        fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            access_key: WEB3FORMS_KEY,
+            subject: k.subject,
+            from_name: 'diane-michaela.github.io',
+            name: name || '(no name)',
+            email: email,
+            message: k.body(name, email, text)
+          })
+        }).then(function (r) { return r.json(); }).then(function (j) {
+          if (!j.success) throw new Error(j.message || 'fail');
+          track(k.event[0], k.event[1]);
+          form.hidden = true; formDlg.querySelector('.ask-done').hidden = false;
+        }).catch(function () {
+          status.className = 'ask-msg bad';
+          status.textContent = 'Could not send. Please try again in a moment.';
+        }).then(function () { send.disabled = false; });
+      });
     }
-    askDlg.querySelector('.ask-talk').textContent = '"' + v.title + '"';
-    var li = askDlg.querySelector('.ask-li');
-    li.onclick = function () { track('code-' + v.id + '-linkedin', 'Ask popup → LinkedIn: ' + v.title); };
-    if (askDlg.showModal) askDlg.showModal(); else askDlg.setAttribute('open', '');
+    var f = formDlg.querySelector('form');
+    f.hidden = false; f.reset();
+    formDlg.querySelector('.ask-done').hidden = true;
+    formDlg.querySelector('.ask-ico').textContent = c.icon;
+    formDlg.querySelector('.ask-title').textContent = c.title;
+    formDlg.querySelector('.ask-intro').innerHTML = c.intro;
+    formDlg.querySelector('.ask-note').textContent = c.note;
+    formDlg.querySelector('.ask-send').textContent = c.send;
+    formDlg.querySelector('.ask-done-title').textContent = c.doneTitle;
+    formDlg.querySelector('.ask-done-text').textContent = c.doneText;
+    formDlg.querySelector('.ask-msg').textContent = '';
+    var ta = f.querySelector('[name=message]');
+    ta.hidden = !c.message; ta.required = !!c.message;
+    if (formDlg.showModal) formDlg.showModal(); else formDlg.setAttribute('open', '');
+    f.querySelector('[name=email]').focus();
   }
   var encCache = {};
   function fetchBytes(url, progress) {
@@ -1019,9 +1113,12 @@ function track(path, title) {
     document.querySelectorAll('[data-count]').forEach(function (el) { io.observe(el); });
   }
 
-  /* email assembled in the browser so scrapers don't pick it up from the source */
-  var u = 'dianemichaela88', d = 'gmail.com';
-  document.getElementById('mail').href = 'mailto:' + u + '@' + d;
+  /* "Email me" opens the contact pop-up (no address in the page) */
+  document.getElementById('mail').addEventListener('click', function (e) {
+    e.preventDefault();
+    track('click-email', 'Clicked: Email me');
+    contactPopup();
+  });
   document.getElementById('y').textContent = new Date().getFullYear();
 })();
 </script>
