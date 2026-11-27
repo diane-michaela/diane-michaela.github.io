@@ -236,6 +236,17 @@ section { padding: 48px 0; }
 .lock-msg.bad { color: #ffb4b4 !important; }
 .lock .ask { background: transparent; color: #fff; border-color: rgba(255,255,255,.6); }
 .lock .ask:hover { border-color: #fff; text-decoration: none; }
+.lock .ask { cursor: pointer; font: inherit; font-weight: 600; }
+.ask-dlg { width: min(420px, calc(100vw - 32px)); border: 1px solid var(--line); border-radius: 18px; padding: 28px 24px 22px;
+  background: var(--surface); color: var(--text); box-shadow: var(--shadow); text-align: center; }
+.ask-dlg::backdrop { background: rgba(8,10,20,.55); backdrop-filter: blur(4px); }
+.ask-ico { width: 44px; height: 44px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent); font-size: 22px; font-weight: 700; }
+.ask-dlg h3 { font-size: 21px; margin: 12px 0 6px; }
+.ask-dlg p { margin: 0 0 18px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.ask-dlg p b { color: var(--text); font-weight: 600; }
+.ask-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.ask-row .btn { cursor: pointer; font: inherit; font-weight: 600; }
 
 /* player */
 .player { display: grid; gap: 14px; grid-template-columns: 1fr; margin-bottom: 28px; }
@@ -718,9 +729,6 @@ function track(path, title) {
   /* locked videos: the file on the server is AES-GCM encrypted (tools/encrypt_video.py).
      The code is never in the page: without it the download is unreadable. */
   function lockScreen(v, autoplay) {
-    var mail = 'dianemichaela88' + '@' + 'gmail.com';
-    var subject = 'Code for your talk "' + v.title + '"';
-    var body = 'Hi Diane,\n\nI would like to watch your talk "' + v.title + '" on your website. Could you send me the code?\n\nThanks,\n';
     screen.innerHTML =
       '<div class="lock" style="background-image:url(' + v.poster + ')"><form class="lock-card">' +
       '<div class="lock-ico" aria-hidden="true">🔒</div>' +
@@ -729,10 +737,12 @@ function track(path, title) {
       '<div class="lock-row"><input type="password" autocomplete="off" placeholder="Code" aria-label="Code">' +
       '<button type="submit" class="btn primary">Unlock</button></div>' +
       '<p class="lock-msg" role="status"></p>' +
-      '<a class="btn ask" href="mailto:' + mail + '?subject=' + encodeURIComponent(subject) +
-      '&body=' + encodeURIComponent(body) + '">✉ Ask Diane for the code</a>' +
+      '<button type="button" class="btn ask">✉ Ask Diane for the code</button>' +
       '</form></div>';
-    screen.querySelector('.ask').addEventListener('click', function () { track('code-' + v.id + '-ask', 'Asked Diane for the code: ' + v.title); });
+    screen.querySelector('.ask').addEventListener('click', function () {
+      track('code-' + v.id + '-ask', 'Asked Diane for the code: ' + v.title);
+      askPopup(v);
+    });
     var form = screen.querySelector('form'), input = form.querySelector('input'),
         msg = form.querySelector('.lock-msg'), btn = form.querySelector('button');
     form.addEventListener('submit', function (e) {
@@ -752,6 +762,28 @@ function track(path, title) {
         input.select();
       });
     });
+  }
+  /* "Ask Diane for the code" pop-up: the code is sent on LinkedIn */
+  var askDlg;
+  function askPopup(v) {
+    if (!askDlg) {
+      askDlg = document.createElement('dialog');
+      askDlg.className = 'ask-dlg';
+      askDlg.innerHTML =
+        '<div class="ask-ico" aria-hidden="true">✓</div>' +
+        '<h3>Code requested</h3>' +
+        '<p>Diane shares the code on LinkedIn. Connect with her and mention <b class="ask-talk"></b>: she will send you the code there.</p>' +
+        '<div class="ask-row">' +
+        '<a class="btn primary ask-li" href="https://www.linkedin.com/in/diane-rocher-87b4a027" target="_blank" rel="noopener">Connect with Diane on LinkedIn</a>' +
+        '<button type="button" class="btn ask-close">Close</button></div>';
+      document.body.appendChild(askDlg);
+      askDlg.querySelector('.ask-close').addEventListener('click', function () { askDlg.close(); });
+      askDlg.addEventListener('click', function (e) { if (e.target === askDlg) askDlg.close(); });
+    }
+    askDlg.querySelector('.ask-talk').textContent = '"' + v.title + '"';
+    var li = askDlg.querySelector('.ask-li');
+    li.onclick = function () { track('code-' + v.id + '-linkedin', 'Ask popup → LinkedIn: ' + v.title); };
+    if (askDlg.showModal) askDlg.showModal(); else askDlg.setAttribute('open', '');
   }
   var encCache = {};
   function fetchBytes(url, progress) {
