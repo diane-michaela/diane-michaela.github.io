@@ -174,6 +174,10 @@ section { padding: 48px 0; }
 .job ul { margin: 0 0 12px; padding-left: 18px; color: var(--muted); display: none; }
 .job.open ul { display: block; }
 .job li { margin: 4px 0; }
+/* lines of an opened role come in one after the other */
+.job.open li { opacity: 0; animation: li-in .38s ease-out forwards; animation-delay: calc(var(--i, 0) * 90ms); }
+@keyframes li-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .job.open li { animation: none; opacity: 1; } }
 .job li.focus { list-style: none; margin-left: -18px; margin-top: 8px; font-size: 14px; color: var(--accent); }
 
 .skills { display: grid; gap: 14px; grid-template-columns: 1fr; }
@@ -1087,20 +1091,31 @@ function track(path, title) {
   });
 
   /* career accordion */
-  /* with a mouse, pointing at a role opens it (it stays open, so the list never jumps
-     under the cursor); click still toggles, and works alone on phones */
+  /* with a mouse, pointing at a role opens it and closes the others; the page scrolls by
+     the height that closed above, so the role under the cursor doesn't move (no cascade).
+     Click still toggles, and works alone on phones */
   var canHover = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches;
-  document.querySelectorAll('.job button').forEach(function (b) {
-    var job = b.parentElement, timer, hoverOpenedAt = 0;
-    function setOpen(open) { job.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open)); }
+  var jobs = Array.prototype.slice.call(document.querySelectorAll('.job'));
+  jobs.forEach(function (j) { j.querySelectorAll('li').forEach(function (li, i) { li.style.setProperty('--i', i); }); });
+  function setOpen(job, open) {
+    job.classList.toggle('open', open);
+    job.querySelector('button').setAttribute('aria-expanded', String(open));
+  }
+  jobs.forEach(function (job) {
+    var b = job.querySelector('button'), timer, hoverOpenedAt = 0;
     b.addEventListener('click', function () {
       if (Date.now() - hoverOpenedAt < 800) return; /* just opened by hover: don't close it again */
-      setOpen(!job.classList.contains('open'));
+      setOpen(job, !job.classList.contains('open'));
     });
     if (canHover) {
       b.addEventListener('mouseenter', function () {
         timer = setTimeout(function () {
-          if (!job.classList.contains('open')) { setOpen(true); hoverOpenedAt = Date.now(); }
+          if (job.classList.contains('open')) return;
+          var before = b.getBoundingClientRect().top;
+          jobs.forEach(function (j) { if (j !== job) setOpen(j, false); });
+          setOpen(job, true); hoverOpenedAt = Date.now();
+          var shift = b.getBoundingClientRect().top - before;
+          if (shift) window.scrollBy({ top: shift, behavior: 'instant' });
         }, 120);
       });
       b.addEventListener('mouseleave', function () { clearTimeout(timer); });
